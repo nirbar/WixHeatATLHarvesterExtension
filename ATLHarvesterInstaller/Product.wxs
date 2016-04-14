@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" 
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
+     xmlns:panelsw="http://schemas.panel-sw.co.il/wix/WixExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     >
+  
+	<Product Id="{AA2556F7-D7A4-43BE-96D6-16B54F6D9D24}" 
+           Name="Spark Extension for Wix Heat" 
+           Language="1033" Version="1.2.1" 
+           Manufacturer="Panel::Software" 
+           UpgradeCode="{D2F2FD99-3F8B-4939-8E1D-DD3F356F952B}">
+    
+		<Package Description="Spark Extension for Wix Heat.exe" 
+             Comments="Spark Extension for Wix Heat.exe"
+      InstallerVersion="300" Compressed="yes" InstallScope="perMachine" />
+
+		<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+
+    <ComponentGroup Id="Files" Directory="INSTALLLOCATION">
+      <Component Id="ATLHarvesterExtension.dll" Guid="*">
+        <File Source="$(var.ATLHarvester.TargetPath)"/>
+      </Component>
+      <Component Id="RegRedir.dll" Guid="*">
+        <File Source="$(var.RegRedir.TargetPath)"/>
+      </Component>
+      <Component Id="RegRedir64.dll" Guid="*">
+        <File Source="$(var.RegRedir.TargetDir)RegRedir64.dll"/>
+      </Component>
+      <Component Id="ATLHarvesterProxy64.exe" Guid="*">
+        <File Source="$(var.Proxy64.TargetPath)"/>
+      </Component>
+      <Component Id="ATLHarvesterProxy64.exe.config" Guid="*">
+        <File Source="$(var.Proxy64.TargetPath).config"/>
+      </Component>
+    </ComponentGroup>
+    
+		<Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLLOCATION" Name="ATLHarvesterInstaller"/>
+      </Directory>
+		</Directory>
+
+    <Feature Id="ProductFeature" Title="ATLHarvesterInstaller" Level="1">
+      <ComponentGroupRef Id="Files"/>
+      <ComponentRef Id="HeatConfig"/>
+    </Feature>
+
+    <!-- Check that .NET 4.0 is present -->
+    <PropertyRef Id="NETFRAMEWORK40FULL"/>
+
+    <Condition Message="This application requires .NET Framework 4.0. Please install the .NET Framework and then run this installer again.">
+      <![CDATA[Installed OR NETFRAMEWORK40FULL]]>
+    </Condition>
+
+    <!-- Check for Windows XP or later (501=XP, 601=Windows 7) -->
+    <Condition Message="This application requires Windows XP or later.">
+      <![CDATA[Installed OR (VersionNT >= 501)]]>
+    </Condition>
+
+    <Property Id="ARPNOMODIFY" Value="1"/>
+
+    <!-- ======================== -->
+    <!-- Set target folder -->
+    <SetProperty Id="INSTALLLOCATION" Value="[%WIX]\bin" Sequence="first" Before="XmlSearch">
+      <![CDATA[Not Installed And %WIX And Not FORCE_INSTALLLOCATION]]>
+    </SetProperty>
+    <SetProperty Id="INSTALLLOCATION" Value="[FORCE_INSTALLLOCATION]" Sequence="first" Before="XmlSearch" Action="SetINSTALLLOCATION.1">
+      <![CDATA[Not Installed And FORCE_INSTALLLOCATION]]>
+    </SetProperty>
+    <Condition Message="Could not detect WiX location. Please set FORCE_INSTALLLOCATION on the command line to WiX bin folder">
+      <![CDATA[Installed Or INSTALLLOCATION]]>
+    </Condition>
+
+    <!-- ======================== -->
+    <!-- Config heat.exe.config -->
+    <Property Id="HeatConfig">
+      <panelsw:XmlSearch Id="HeatConfig"  Language="XPath"
+                         FilePath="[INSTALLLOCATION]\heat.exe.config"
+                         XPath="/configuration/appSettings/add[\[]@key='extensions'[\]]/@value">
+        <![CDATA[Not Installed]]>
+      </panelsw:XmlSearch>
+    </Property>
+    <Condition Message="Heat.exe.config not found">
+      <![CDATA[Installed Or (HeatConfig And Not (HeatConfig="Not Installed"))]]>
+    </Condition>
+    <Component Id="HeatConfig" Guid="{2DED338E-D6B8-49F9-BA33-C964DF3038A4}" KeyPath="yes" Directory="INSTALLLOCATION" Transitive="yes">
+      <Condition>
+        <![CDATA[Not (HeatConfig="Not Installed") And Not (HeatConfig><"ATLHarvesterExtension")]]>
+      </Condition>
+      <CreateFolder />
+      <util:XmlFile Id="HeatConfig" Action="setValue"  SelectionLanguage="XPath"
+                    File="[INSTALLLOCATION]heat.exe.config"
+                    ElementPath="/configuration/appSettings/add[\[]@key='extensions'[\]]"
+                    Name="value"
+                    Value="[HeatConfig];ATLHarvesterExtension"
+                    />
+    </Component>
+    
+  </Product>
+</Wix>
