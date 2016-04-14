@@ -135,9 +135,9 @@
             }
             catch (BadImageFormatException)
             {//try to harvest win64 dll exporting DllRegisterServer
-                StartRegistryRedirection();
                 NativeMethods.SetPerUserTypelibs();
                 NativeMethods.LoadLibrary(file);
+                StartRegistryRedirection();
 
                 try
                 {
