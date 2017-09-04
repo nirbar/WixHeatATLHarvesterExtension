@@ -876,7 +876,12 @@ namespace ATLCOMHarvester
                                     }
                                     else if (String.Equals(parts[3], "helpdir", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        if (registryValue.Value.StartsWith("[", StringComparison.Ordinal) && (registryValue.Value.EndsWith("]", StringComparison.Ordinal)
+                                        string dirPrefix = null; // I did not find how to retrieve this from the FileHarvester
+                                        if (this.directories.Count > 0) dirPrefix = ((Wix.Directory)this.directories[0]).Id.Substring(0, 3); // A workaround is to steal the prefix from the first known directory
+
+                                        if (dirPrefix != null
+                                            && ( registryValue.Value.StartsWith(string.Concat("[#", dirPrefix), StringComparison.Ordinal) || registryValue.Value.StartsWith(string.Concat("[!", dirPrefix), StringComparison.Ordinal))
+                                            && (registryValue.Value.EndsWith("]", StringComparison.Ordinal)
                                             || registryValue.Value.EndsWith("]\\", StringComparison.Ordinal)))
                                         {
                                             typeLib.HelpDirectory = registryValue.Value.Substring(1, registryValue.Value.LastIndexOf(']') - 1);
