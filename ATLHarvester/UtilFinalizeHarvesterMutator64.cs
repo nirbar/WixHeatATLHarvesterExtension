@@ -913,10 +913,14 @@ namespace ATLCOMHarvester
                                 {
                                     typeLib.Language = Convert.ToInt32(parts[3], CultureInfo.InvariantCulture);
 
-                                    if ((registryValue.Value.StartsWith("[!", StringComparison.Ordinal) || registryValue.Value.StartsWith("[#", StringComparison.Ordinal))
-                                        && registryValue.Value.EndsWith("]", StringComparison.Ordinal))
+                                    if ((registryValue.Value.StartsWith("[!", StringComparison.Ordinal) || registryValue.Value.StartsWith("[#", StringComparison.Ordinal)))
                                     {
-                                        parentIndex = String.Concat("file/", registryValue.Value.Substring(2, registryValue.Value.Length - 3));
+                                        string[] win32 = registryValue.Value.Split('\\');
+                                        if (win32[0].EndsWith("]", StringComparison.Ordinal))
+                                        {
+                                            parentIndex = String.Concat("file/", win32[0].Substring(2, win32[0].Length - 3));
+                                            if (win32.Length == 2) typeLib.ResourceId = Convert.ToInt32(win32[1], CultureInfo.InvariantCulture);
+                                        }
                                     }
 
                                     processed = true;
