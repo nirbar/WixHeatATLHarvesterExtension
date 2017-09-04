@@ -530,7 +530,7 @@ namespace ATLCOMHarvester
                             {
                                 if (null == registryValue.Name)
                                 {
-                                    wixClass.Description = registryValue.Value;
+                                    if (registryValue.Value.Length > 0) wixClass.Description = registryValue.Value;
                                     processed = true;
                                 }
                                 else if (String.Equals(registryValue.Name, "AppID", StringComparison.OrdinalIgnoreCase))
