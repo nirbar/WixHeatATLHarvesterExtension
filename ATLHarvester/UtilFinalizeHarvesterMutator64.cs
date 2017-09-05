@@ -530,7 +530,7 @@ namespace ATLCOMHarvester
                             {
                                 if (null == registryValue.Name)
                                 {
-                                    wixClass.Description = registryValue.Value;
+                                    if (registryValue.Value.Length > 0) wixClass.Description = registryValue.Value;
                                     processed = true;
                                 }
                                 else if (String.Equals(registryValue.Name, "AppID", StringComparison.OrdinalIgnoreCase))
@@ -876,7 +876,12 @@ namespace ATLCOMHarvester
                                     }
                                     else if (String.Equals(parts[3], "helpdir", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        if (registryValue.Value.StartsWith("[", StringComparison.Ordinal) && (registryValue.Value.EndsWith("]", StringComparison.Ordinal)
+                                        string dirPrefix = null; // I did not find how to retrieve this from the FileHarvester
+                                        if (this.directories.Count > 0) dirPrefix = ((Wix.Directory)this.directories[0]).Id.Substring(0, 3); // A workaround is to steal the prefix from the first known directory
+
+                                        if (dirPrefix != null
+                                            && ( registryValue.Value.StartsWith(string.Concat("[#", dirPrefix), StringComparison.Ordinal) || registryValue.Value.StartsWith(string.Concat("[!", dirPrefix), StringComparison.Ordinal))
+                                            && (registryValue.Value.EndsWith("]", StringComparison.Ordinal)
                                             || registryValue.Value.EndsWith("]\\", StringComparison.Ordinal)))
                                         {
                                             typeLib.HelpDirectory = registryValue.Value.Substring(1, registryValue.Value.LastIndexOf(']') - 1);
@@ -908,10 +913,14 @@ namespace ATLCOMHarvester
                                 {
                                     typeLib.Language = Convert.ToInt32(parts[3], CultureInfo.InvariantCulture);
 
-                                    if ((registryValue.Value.StartsWith("[!", StringComparison.Ordinal) || registryValue.Value.StartsWith("[#", StringComparison.Ordinal))
-                                        && registryValue.Value.EndsWith("]", StringComparison.Ordinal))
+                                    if ((registryValue.Value.StartsWith("[!", StringComparison.Ordinal) || registryValue.Value.StartsWith("[#", StringComparison.Ordinal)))
                                     {
-                                        parentIndex = String.Concat("file/", registryValue.Value.Substring(2, registryValue.Value.Length - 3));
+                                        string[] win32 = registryValue.Value.Split('\\');
+                                        if (win32[0].EndsWith("]", StringComparison.Ordinal))
+                                        {
+                                            parentIndex = String.Concat("file/", win32[0].Substring(2, win32[0].Length - 3));
+                                            if (win32.Length == 2) typeLib.ResourceId = Convert.ToInt32(win32[1], CultureInfo.InvariantCulture);
+                                        }
                                     }
 
                                     processed = true;

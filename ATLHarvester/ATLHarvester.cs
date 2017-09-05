@@ -51,12 +51,17 @@ SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"),
                 bool useDash = false;
                 bool suppressStdole2 = false;
                 bool addShellExtensionKey = false;
+                bool generateGuids = false;
+                bool autogenerateGuids = false;
+                bool suppressRootDirectory = false;
+                string directoryRefId = null;
+                string preprocessorVariable = null;
 
-                // TODO: parse command-line options more completely, eg. -ag, -gg, -g1, etc.
-                // Note that -gg is the default (see ATLUtilMutator ctor below)
+                // TODO: parse command-line options more completely, eg. -g1, etc.
 
-                foreach (string option in args)
+                for(int k=0; k < args.Length; k++)
                 {
+                    string option = args[k];
                     if (String.Equals(option, "-dash", StringComparison.OrdinalIgnoreCase) ||
                         String.Equals(option, "/dash", StringComparison.OrdinalIgnoreCase))
                     {
@@ -72,15 +77,47 @@ SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"),
                     {
                         addShellExtensionKey = true;
                     }
+                    else if (string.Equals(option, "-gg", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(option, "/gg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        generateGuids = true;
+                    }
+                    else if (string.Equals(option, "-ag", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(option, "/ag", StringComparison.OrdinalIgnoreCase))
+                    {
+                        autogenerateGuids = true;
+                    }
+                    else if (string.Equals(option, "-srd", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(option, "/srd", StringComparison.OrdinalIgnoreCase))
+                    {
+                        suppressRootDirectory = true;
+                    }
+                    else if (string.Equals(option, "-dr", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(option, "/dr", StringComparison.OrdinalIgnoreCase))
+                    {
+                        k++;
+                        if (k < args.Length) directoryRefId = args[k];
+                    }
+                    else if (string.Equals(option, "-var", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(option, "/var", StringComparison.OrdinalIgnoreCase))
+                    {
+                        k++;
+                        if (k < args.Length) preprocessorVariable = args[k];
+                    }
                 }
 
-                this.Core.Harvester.Core.RootDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(this.Core.Harvester.Core.ExtensionArgument)));
+                this.Core.Harvester.Core.RootDirectory = Path.GetDirectoryName(Path.GetFullPath(this.Core.Harvester.Core.ExtensionArgument));
+                if (!suppressRootDirectory) this.Core.Harvester.Core.RootDirectory = Path.GetDirectoryName(this.Core.Harvester.Core.RootDirectory);
 
                 // GetDirectoryName() returns null for root paths such as "c:\", so make sure to support that as well
                 if (null == this.Core.Harvester.Core.RootDirectory)
                 {
                     this.Core.Harvester.Core.RootDirectory = Path.GetPathRoot(Path.GetDirectoryName(Path.GetFullPath(this.Core.Harvester.Core.ExtensionArgument)));
                 }
+
+                var fh = (FileHarvester)this.Core.Harvester.Extension;
+                fh.SuppressRootDirectory = suppressRootDirectory;
+                if (!string.IsNullOrEmpty(directoryRefId)) fh.RootedDirectoryRef = directoryRefId;
 
                 var hm = new ATLUtilHarvesterMutator();
                 hm.UseDash = useDash;
@@ -90,10 +127,13 @@ SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"),
                 var mutator = new UtilFinalizeHarvesterMutator64();
                 mutator.SuppressVB6COMElements = true;
                 mutator.SuppressSTDOLE2Elements = suppressStdole2;
+                if (!string.IsNullOrEmpty(preprocessorVariable)) mutator.PreprocessorVariable = preprocessorVariable;
                 this.Core.Mutator.AddExtension(mutator);
 
                 var utilMutator = new ATLUtilMutator();
                 // TODO: set utilMutator options, eg. GenerateGuids
+                utilMutator.GenerateGuids = generateGuids;
+                utilMutator.AutogenerateGuids = autogenerateGuids;
                 this.Core.Mutator.AddExtension(utilMutator);
          
             }   // IF activated
@@ -115,7 +155,6 @@ SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"),
         public ATLUtilMutator()
         {
             utilMutator = new UtilMutator();
-            utilMutator.GenerateGuids = true;
         }
 
         /// <summary>
@@ -127,7 +166,7 @@ SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"),
             get { return 900; }
         }
 
-         /// <summary>
+        /// <summary>
         /// Mutate a WiX document.
         /// </summary>
         /// <param name="wix">The Wix document element.</param>
@@ -135,6 +174,18 @@ SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"),
         {
             // delegate to contained instance.
             utilMutator.Mutate(wix);
+        }
+
+        public bool GenerateGuids
+        {
+            get { return utilMutator.GenerateGuids; }
+            set { utilMutator.GenerateGuids = value; }
+        }
+
+        public bool AutogenerateGuids
+        {
+            get { return utilMutator.AutogenerateGuids; }
+            set { utilMutator.AutogenerateGuids = value; }
         }
     }
 }
