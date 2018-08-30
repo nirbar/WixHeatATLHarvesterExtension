@@ -265,8 +265,7 @@ namespace ATLCOMHarvester
                 // Search for STDOLE2 specific COM registrations
                 foreach (Wix.Component component in this.components)
                 {
-                    ArrayList stdOleRegistryValues = new ArrayList();
-
+					ArrayList stdOleRegistryValues = new ArrayList();
                     foreach (Wix.RegistryValue registryValue in component[typeof(Wix.RegistryValue)])
                     {
                         if (Wix.RegistryValue.ActionType.write == registryValue.Action && Wix.RegistryRootType.HKCR == registryValue.Root)
@@ -421,7 +420,7 @@ namespace ATLCOMHarvester
 
                                     if (!indexedElements.Contains(index))
                                     {
-                                        Version version = TypeLibraryHarvester.ParseHexVersion(parts[2]);
+                                        Version version = ATLTypeLibraryHarvester.ParseHexVersion(parts[2]);
                                         if (version != null)
                                         {
                                             Wix.TypeLib typeLib = new Wix.TypeLib();
@@ -993,7 +992,7 @@ namespace ATLCOMHarvester
             }
         }
 
-        /// <summary>
+		/// <summary>
         /// Mutate the directories.
         /// </summary>
         [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Justification = "These strings won't be round-tripped, and have no security impact.")]

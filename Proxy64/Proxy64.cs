@@ -1,4 +1,6 @@
-﻿namespace ATLCOMHarvester
+﻿using System.Runtime.InteropServices.ComTypes;
+
+namespace ATLCOMHarvester
 {
     using System;
     using System.IO;
@@ -109,12 +111,12 @@
             }
         }
 
-        /// <summary>
-        /// Load DLL and invoke its DllRegisterServer method.
-        /// </summary>
-        /// <param name="file">path to DLL</param>
-        /// <returns>error code, or 0 if no error</returns>
-        static int LoadDLL(string file)
+		/// <summary>
+		/// Load DLL and invoke its DllRegisterServer method.
+		/// </summary>
+		/// <param name="file">path to DLL</param>
+		/// <returns>error code, or 0 if no error</returns>
+		static int LoadDLL(string file)
         {
 
             try
@@ -132,8 +134,8 @@
 
                 RegistrationServices regSvcs = new RegistrationServices();
                 regSvcs.RegisterAssembly(assembly, AssemblyRegistrationFlags.SetCodeBase);
-            }
-            catch (BadImageFormatException)
+			}
+			catch (BadImageFormatException)
             {//try to harvest win64 dll exporting DllRegisterServer
                 NativeMethods.SetPerUserTypelibs();
                 NativeMethods.LoadLibrary(file);
@@ -272,12 +274,12 @@
             /// </summary>
             [DllImport("Oleaut32.dll")]
             private static extern void OaEnablePerUserTLibRegistration();
-        }
+		}
 
-        /// <summary>
-        /// Found on the net from a patched version of Tallow (Wix 2.0).
-        /// </summary>
-        internal class ProcessWithInjectedDll
+		/// <summary>
+		/// Found on the net from a patched version of Tallow (Wix 2.0).
+		/// </summary>
+		internal class ProcessWithInjectedDll
         {
             [DllImport("kernel32.dll")]
             private static extern int CloseHandle(IntPtr hObject);

@@ -46,98 +46,96 @@ SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"),
                 activated = true;
             }
 
-            if (activated)
-            {
-                bool useDash = false;
-                bool suppressStdole2 = false;
-                bool addShellExtensionKey = false;
-                bool generateGuids = false;
-                bool autogenerateGuids = false;
-                bool suppressRootDirectory = false;
-                string directoryRefId = null;
-                string preprocessorVariable = null;
+			if (!activated) return;
 
-                // TODO: parse command-line options more completely, eg. -g1, etc.
+			bool useDash = false;
+			bool suppressStdole2 = false;
+			bool addShellExtensionKey = false;
+			bool generateGuids = false;
+			bool autogenerateGuids = false;
+			bool suppressRootDirectory = false;
+			string directoryRefId = null;
+			string preprocessorVariable = null;
 
-                for(int k=0; k < args.Length; k++)
-                {
-                    string option = args[k];
-                    if (String.Equals(option, "-dash", StringComparison.OrdinalIgnoreCase) ||
-                        String.Equals(option, "/dash", StringComparison.OrdinalIgnoreCase))
-                    {
-                        useDash = true;
-                    }
-                    else if (string.Equals(option, "-sstd", StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(option, "/sstd", StringComparison.OrdinalIgnoreCase))
-                    {
-                        suppressStdole2 = true;
-                    }
-                    else if (string.Equals(option, "-shell", StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(option, "/shell", StringComparison.OrdinalIgnoreCase))
-                    {
-                        addShellExtensionKey = true;
-                    }
-                    else if (string.Equals(option, "-gg", StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(option, "/gg", StringComparison.OrdinalIgnoreCase))
-                    {
-                        generateGuids = true;
-                    }
-                    else if (string.Equals(option, "-ag", StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(option, "/ag", StringComparison.OrdinalIgnoreCase))
-                    {
-                        autogenerateGuids = true;
-                    }
-                    else if (string.Equals(option, "-srd", StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(option, "/srd", StringComparison.OrdinalIgnoreCase))
-                    {
-                        suppressRootDirectory = true;
-                    }
-                    else if (string.Equals(option, "-dr", StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(option, "/dr", StringComparison.OrdinalIgnoreCase))
-                    {
-                        k++;
-                        if (k < args.Length) directoryRefId = args[k];
-                    }
-                    else if (string.Equals(option, "-var", StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(option, "/var", StringComparison.OrdinalIgnoreCase))
-                    {
-                        k++;
-                        if (k < args.Length) preprocessorVariable = args[k];
-                    }
-                }
+			// TODO: parse command-line options more completely, eg. -g1, etc.
 
-                this.Core.Harvester.Core.RootDirectory = Path.GetDirectoryName(Path.GetFullPath(this.Core.Harvester.Core.ExtensionArgument));
-                if (!suppressRootDirectory) this.Core.Harvester.Core.RootDirectory = Path.GetDirectoryName(this.Core.Harvester.Core.RootDirectory);
+			for(int k=0; k < args.Length; k++)
+			{
+				string option = args[k];
+				if (String.Equals(option, "-dash", StringComparison.OrdinalIgnoreCase) ||
+					String.Equals(option, "/dash", StringComparison.OrdinalIgnoreCase))
+				{
+					useDash = true;
+				}
+				else if (string.Equals(option, "-sstd", StringComparison.OrdinalIgnoreCase) ||
+						 string.Equals(option, "/sstd", StringComparison.OrdinalIgnoreCase))
+				{
+					suppressStdole2 = true;
+				}
+				else if (string.Equals(option, "-shell", StringComparison.OrdinalIgnoreCase) ||
+						 string.Equals(option, "/shell", StringComparison.OrdinalIgnoreCase))
+				{
+					addShellExtensionKey = true;
+				}
+				else if (string.Equals(option, "-gg", StringComparison.OrdinalIgnoreCase) ||
+						 string.Equals(option, "/gg", StringComparison.OrdinalIgnoreCase))
+				{
+					generateGuids = true;
+				}
+				else if (string.Equals(option, "-ag", StringComparison.OrdinalIgnoreCase) ||
+						 string.Equals(option, "/ag", StringComparison.OrdinalIgnoreCase))
+				{
+					autogenerateGuids = true;
+				}
+				else if (string.Equals(option, "-srd", StringComparison.OrdinalIgnoreCase) ||
+						 string.Equals(option, "/srd", StringComparison.OrdinalIgnoreCase))
+				{
+					suppressRootDirectory = true;
+				}
+				else if (string.Equals(option, "-dr", StringComparison.OrdinalIgnoreCase) ||
+						 string.Equals(option, "/dr", StringComparison.OrdinalIgnoreCase))
+				{
+					k++;
+					if (k < args.Length) directoryRefId = args[k];
+				}
+				else if (string.Equals(option, "-var", StringComparison.OrdinalIgnoreCase) ||
+						 string.Equals(option, "/var", StringComparison.OrdinalIgnoreCase))
+				{
+					k++;
+					if (k < args.Length) preprocessorVariable = args[k];
+				}
+			}
 
-                // GetDirectoryName() returns null for root paths such as "c:\", so make sure to support that as well
-                if (null == this.Core.Harvester.Core.RootDirectory)
-                {
-                    this.Core.Harvester.Core.RootDirectory = Path.GetPathRoot(Path.GetDirectoryName(Path.GetFullPath(this.Core.Harvester.Core.ExtensionArgument)));
-                }
+			this.Core.Harvester.Core.RootDirectory = Path.GetDirectoryName(Path.GetFullPath(this.Core.Harvester.Core.ExtensionArgument));
+			if (!suppressRootDirectory) this.Core.Harvester.Core.RootDirectory = Path.GetDirectoryName(this.Core.Harvester.Core.RootDirectory);
 
-                var fh = (FileHarvester)this.Core.Harvester.Extension;
-                fh.SuppressRootDirectory = suppressRootDirectory;
-                if (!string.IsNullOrEmpty(directoryRefId)) fh.RootedDirectoryRef = directoryRefId;
+			// GetDirectoryName() returns null for root paths such as "c:\", so make sure to support that as well
+			if (null == this.Core.Harvester.Core.RootDirectory)
+			{
+				this.Core.Harvester.Core.RootDirectory = Path.GetPathRoot(Path.GetDirectoryName(Path.GetFullPath(this.Core.Harvester.Core.ExtensionArgument)));
+			}
 
-                var hm = new ATLUtilHarvesterMutator();
-                hm.UseDash = useDash;
-                hm.AddShellExtensionKey = addShellExtensionKey;
-                this.Core.Mutator.AddExtension(hm);
+			var fh = (FileHarvester)this.Core.Harvester.Extension;
+			fh.SuppressRootDirectory = suppressRootDirectory;
+			if (!string.IsNullOrEmpty(directoryRefId)) fh.RootedDirectoryRef = directoryRefId;
 
-                var mutator = new UtilFinalizeHarvesterMutator64();
-                mutator.SuppressVB6COMElements = true;
-                mutator.SuppressSTDOLE2Elements = suppressStdole2;
-                if (!string.IsNullOrEmpty(preprocessorVariable)) mutator.PreprocessorVariable = preprocessorVariable;
-                this.Core.Mutator.AddExtension(mutator);
+			var hm = new ATLUtilHarvesterMutator();
+			hm.UseDash = useDash;
+			hm.AddShellExtensionKey = addShellExtensionKey;
+			this.Core.Mutator.AddExtension(hm);
 
-                var utilMutator = new ATLUtilMutator();
-                // TODO: set utilMutator options, eg. GenerateGuids
-                utilMutator.GenerateGuids = generateGuids;
-                utilMutator.AutogenerateGuids = autogenerateGuids;
-                this.Core.Mutator.AddExtension(utilMutator);
-         
-            }   // IF activated
-        }
+			var mutator = new UtilFinalizeHarvesterMutator64();
+			mutator.SuppressVB6COMElements = true;
+			mutator.SuppressSTDOLE2Elements = suppressStdole2;
+			if (!string.IsNullOrEmpty(preprocessorVariable)) mutator.PreprocessorVariable = preprocessorVariable;
+			this.Core.Mutator.AddExtension(mutator);
+
+			var utilMutator = new ATLUtilMutator();
+			// TODO: set utilMutator options, eg. GenerateGuids
+			utilMutator.GenerateGuids = generateGuids;
+			utilMutator.AutogenerateGuids = autogenerateGuids;
+			this.Core.Mutator.AddExtension(utilMutator);
+		}
     }
 
     /// <summary>

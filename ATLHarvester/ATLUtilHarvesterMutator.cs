@@ -38,6 +38,7 @@
 
         protected bool useDash;
         protected bool addShellExtensionKey;
+        protected bool x64TypeLib;
 
         public ATLUtilHarvesterMutator()
         {
@@ -125,156 +126,196 @@
         /// <param name="file">The file to mutate.</param>
         protected void MutateFile(Wix.IParentElement parentElement, Wix.File file)
         {
-            if (null != file.Source)
-            {
-                string fileExtension = Path.GetExtension(file.Source);
-                string fileSource = this.Core.ResolveFilePath(file.Source);
+			if (null == file.Source) return;
 
-                if (String.Equals(".dll", fileExtension, StringComparison.OrdinalIgnoreCase) ||
-                    String.Equals(".ocx", fileExtension, StringComparison.OrdinalIgnoreCase)) // ActiveX
-                {
-                    try
-                    {
-                        ATLDllHarvester dllHarvester = new ATLDllHarvester();
+			string fileExtension = Path.GetExtension(file.Source);
+			string fileSource = this.Core.ResolveFilePath(file.Source);
 
-                        this.Core.OnMessage(UtilVerboses.HarvestingSelfReg(fileSource));
-                        Wix.RegistryValue[] registryValues = dllHarvester.HarvestRegistryValues(fileSource, addShellExtensionKey);
+			if (String.Equals(".dll", fileExtension, StringComparison.OrdinalIgnoreCase) ||
+				String.Equals(".ocx", fileExtension, StringComparison.OrdinalIgnoreCase)) // ActiveX
+			{
+				mutateDllComServer(parentElement, fileSource);
+			}
+			else if (String.Equals(".exe", fileExtension, StringComparison.OrdinalIgnoreCase))
+			{
+				mutateExeComServer(parentElement, fileSource);
+			}
+			else if (string.Equals(".plb", fileExtension, StringComparison.OrdinalIgnoreCase) || 
+					 string.Equals(".tlb", fileExtension, StringComparison.OrdinalIgnoreCase))
+			{
+				// try the type library harvester
+				try
+				{
+					ATLTypeLibraryHarvester atlTypeLibHarvester = new ATLTypeLibraryHarvester();
 
-                        // Set Win64 on parent component if 64-bit PE.
-                        Wix.Component component = parentElement as Wix.Component;
+					this.Core.OnMessage(UtilVerboses.HarvestingTypeLib(fileSource));
+					Wix.RegistryValue[] registryValues = atlTypeLibHarvester.HarvestRegistryValues(fileSource);
 
-                        if ((component != null) && dllHarvester.Win64)
-                        {
-                            component.Win64 = Wix.YesNoType.yes;
-                        }
+					foreach (Wix.RegistryValue registryValue in registryValues)
+					{
+						parentElement.AddChild(registryValue);
+					}
+				}
+				catch (COMException ce)
+				{
+					//  0x8002801C (TYPE_E_REGISTRYACCESS)
+					// If we don't have permission to harvest typelibs, it's likely because we're on
+					// Vista or higher and aren't an Admin, or don't have the appropriate QFE installed.
+					if (!this.calledPerUserTLibReg && (0x8002801c == unchecked((uint)ce.ErrorCode)))
+					{
+						this.Core.OnMessage(WixWarnings.InsufficientPermissionHarvestTypeLib());
+					}
+					else if (0x80029C4A == unchecked((uint)ce.ErrorCode)) // generic can't load type library
+					{
+						this.Core.OnMessage(UtilWarnings.TypeLibLoadFailed(fileSource, ce.Message));
+					}
+				}
+			}
+		}
 
-                        foreach (Wix.RegistryValue registryValue in registryValues)
-                        {
-                            if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
-                                (Wix.RegistryRootType.HKCR == registryValue.Root) &&
-                                string.Equals(registryValue.Key, ATLRegistryHarvester.ATLRegistrarKey, StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                continue;   // ignore ATL Registrar values
-                            }
-                            else if (addShellExtensionKey && 
-                                (Wix.RegistryValue.ActionType.write == registryValue.Action) &&
-                                (Wix.RegistryRootType.HKLM == registryValue.Root) &&
-                                string.Equals(registryValue.Key, ATLRegistryHarvester.ShellKey, StringComparison.InvariantCultureIgnoreCase) &&
-                                string.IsNullOrEmpty(registryValue.Name))
-                            {
-                                continue;   // ignore Shell Extension base key
-                            }
-                            else
-                            {
-                                parentElement.AddChild(registryValue);
-                            }
-                        }
-                    }
-                    catch (TargetInvocationException tie)
-                    {
-                        if (tie.InnerException is EntryPointNotFoundException)
-                        {
-                            // No DllRegisterServer()
-                        }
-                        else
-                        {
-                            this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, tie.Message));
-                        }
-                    }
-                    catch (COMException ce)
-                    {
-                        //  0x8002801C (TYPE_E_REGISTRYACCESS)
-                        // If we don't have permission to harvest typelibs, it's likely because we're on
-                        // Vista or higher and aren't an Admin, or don't have the appropriate QFE installed.
-                        if (!this.calledPerUserTLibReg && (0x8002801c == unchecked((uint)ce.ErrorCode)))
-                        {
-                            this.Core.OnMessage(WixWarnings.InsufficientPermissionHarvestTypeLib());
-                        }
-                        else
-                        {
-                            this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, ce.Message));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, ex.Message));
-                    }
-                }
-                else if (String.Equals(".exe", fileExtension, StringComparison.OrdinalIgnoreCase))
-                {
-                    try
-                    {
-                        ATLExeHarvester exeHarvester = new ATLExeHarvester(useDash);
+		private void mutateExeComServer(Wix.IParentElement parentElement, string fileSource)
+		{
+			try
+			{
+				ATLExeHarvester exeHarvester = new ATLExeHarvester(useDash);
 
-                        this.Core.OnMessage(UtilVerboses.HarvestingSelfReg(fileSource));
-                        Wix.RegistryValue[] registryValues = exeHarvester.HarvestRegistryValues(fileSource);
+				this.Core.OnMessage(UtilVerboses.HarvestingSelfReg(fileSource));
+				Wix.RegistryValue[] registryValues = exeHarvester.HarvestRegistryValues(fileSource);
 
-                        // Set Win64 on parent component if 64-bit PE.
-                        Wix.Component component = parentElement as Wix.Component;
+				// Set Win64 on parent component if 64-bit PE.
+				Wix.Component component = parentElement as Wix.Component;
 
-                        if ((component != null) && exeHarvester.Win64)
-                        {
-                            component.Win64 = Wix.YesNoType.yes;
-                        }
+				if ((component != null) && exeHarvester.Win64)
+				{
+					component.Win64 = Wix.YesNoType.yes;
+				}
 
-                        foreach (Wix.RegistryValue registryValue in registryValues)
-                        {
-                            if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
-                                (Wix.RegistryRootType.HKCR == registryValue.Root) &&
-                                string.Equals(registryValue.Key, ATLRegistryHarvester.ATLRegistrarKey))
-                            {
-                                continue;   // ignore ATL Registrar values
-                            }
-                            else if (addShellExtensionKey &&
-                                (Wix.RegistryValue.ActionType.write == registryValue.Action) &&
-                                (Wix.RegistryRootType.HKLM == registryValue.Root) &&
-                                string.Equals(registryValue.Key, ATLRegistryHarvester.ShellKey, StringComparison.InvariantCultureIgnoreCase) &&
-                                string.IsNullOrEmpty(registryValue.Name))
-                            {
-                                continue;   // ignore Shell Extension base key
-                            }
-                            else if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
-                                (Wix.RegistryRootType.HKCR == registryValue.Root) &&
-                                registryValue.Key.StartsWith(@"CLSID\{") &&
-                                registryValue.Key.EndsWith(@"}\LocalServer32", StringComparison.OrdinalIgnoreCase))
-                            {
-                                // Fix double (or double-double) quotes around LocalServer32 value, if present.
+				foreach (Wix.RegistryValue registryValue in registryValues)
+				{
+					if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
+						(Wix.RegistryRootType.HKCR == registryValue.Root) &&
+						string.Equals(registryValue.Key, ATLRegistryHarvester.ATLRegistrarKey))
+					{
+						continue; // ignore ATL Registrar values
+					}
+					else if (addShellExtensionKey &&
+							 (Wix.RegistryValue.ActionType.write == registryValue.Action) &&
+							 (Wix.RegistryRootType.HKLM == registryValue.Root) &&
+							 string.Equals(registryValue.Key, ATLRegistryHarvester.ShellKey, StringComparison.InvariantCultureIgnoreCase) &&
+							 string.IsNullOrEmpty(registryValue.Name))
+					{
+						continue; // ignore Shell Extension base key
+					}
+					else if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
+							 (Wix.RegistryRootType.HKCR == registryValue.Root) &&
+							 registryValue.Key.StartsWith(@"CLSID\{") &&
+							 registryValue.Key.EndsWith(@"}\LocalServer32", StringComparison.OrdinalIgnoreCase))
+					{
+						// Fix double (or double-double) quotes around LocalServer32 value, if present.
 
-                                if (registryValue.Value.StartsWith("\"") && registryValue.Value.EndsWith("\""))
-                                {
-                                    registryValue.Value = registryValue.Value.Substring(1, registryValue.Value.Length - 2);
-                                }
-                                else if (registryValue.Value.StartsWith("\"\"") && registryValue.Value.EndsWith("\"\""))
-                                {
-                                    registryValue.Value = registryValue.Value.Substring(2, registryValue.Value.Length - 4);
-                                }
+						if (registryValue.Value.StartsWith("\"") && registryValue.Value.EndsWith("\""))
+						{
+							registryValue.Value = registryValue.Value.Substring(1, registryValue.Value.Length - 2);
+						}
+						else if (registryValue.Value.StartsWith("\"\"") && registryValue.Value.EndsWith("\"\""))
+						{
+							registryValue.Value = registryValue.Value.Substring(2, registryValue.Value.Length - 4);
+						}
 
-                                parentElement.AddChild(registryValue);
-                            }
-                            else if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
-                                (Wix.RegistryRootType.HKCR == registryValue.Root) &&
-                                string.Equals(registryValue.Key, "Interface", StringComparison.OrdinalIgnoreCase))
-                            {
-                                continue;   // ignore extra HKCR\Interface key
-                            }
-                            else if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
-                                (Wix.RegistryRootType.HKLM == registryValue.Root) &&
-                                !registryValue.Key.StartsWith(@"SOFTWARE\Classes\Root",StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                continue;   // ignore anything written to HKLM for now, unless it's under SW\Classes\Root ..
-                            }
-                            else
-                            {
-                                parentElement.AddChild(registryValue);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, ex.Message));
-                    }
-                }
-            }
-        }
-    }
+						parentElement.AddChild(registryValue);
+					}
+					else if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
+							 (Wix.RegistryRootType.HKCR == registryValue.Root) &&
+							 string.Equals(registryValue.Key, "Interface", StringComparison.OrdinalIgnoreCase))
+					{
+						continue; // ignore extra HKCR\Interface key
+					}
+					else if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
+							 (Wix.RegistryRootType.HKLM == registryValue.Root) &&
+							 !registryValue.Key.StartsWith(@"SOFTWARE\Classes\Root", StringComparison.InvariantCultureIgnoreCase))
+					{
+						continue; // ignore anything written to HKLM for now, unless it's under SW\Classes\Root ..
+					}
+					else
+					{
+						parentElement.AddChild(registryValue);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, ex.Message));
+			}
+		}
+
+		private void mutateDllComServer(Wix.IParentElement parentElement, string fileSource)
+		{
+			try
+			{
+				ATLDllHarvester dllHarvester = new ATLDllHarvester();
+
+				this.Core.OnMessage(UtilVerboses.HarvestingSelfReg(fileSource));
+				Wix.RegistryValue[] registryValues = dllHarvester.HarvestRegistryValues(fileSource, addShellExtensionKey);
+
+				// Set Win64 on parent component if 64-bit PE.
+				Wix.Component component = parentElement as Wix.Component;
+
+				if ((component != null) && dllHarvester.Win64)
+				{
+					component.Win64 = Wix.YesNoType.yes;
+				}
+
+				foreach (Wix.RegistryValue registryValue in registryValues)
+				{
+					if ((Wix.RegistryValue.ActionType.write == registryValue.Action) &&
+						(Wix.RegistryRootType.HKCR == registryValue.Root) &&
+						string.Equals(registryValue.Key, ATLRegistryHarvester.ATLRegistrarKey, StringComparison.InvariantCultureIgnoreCase))
+					{
+						continue; // ignore ATL Registrar values
+					}
+					else if (addShellExtensionKey &&
+							 (Wix.RegistryValue.ActionType.write == registryValue.Action) &&
+							 (Wix.RegistryRootType.HKLM == registryValue.Root) &&
+							 string.Equals(registryValue.Key, ATLRegistryHarvester.ShellKey, StringComparison.InvariantCultureIgnoreCase) &&
+							 string.IsNullOrEmpty(registryValue.Name))
+					{
+						continue; // ignore Shell Extension base key
+					}
+					else
+					{
+						parentElement.AddChild(registryValue);
+					}
+				}
+			}
+			catch (TargetInvocationException tie)
+			{
+				if (tie.InnerException is EntryPointNotFoundException)
+				{
+					// No DllRegisterServer()
+				}
+				else
+				{
+					this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, tie.Message));
+				}
+			}
+			catch (COMException ce)
+			{
+				//  0x8002801C (TYPE_E_REGISTRYACCESS)
+				// If we don't have permission to harvest typelibs, it's likely because we're on
+				// Vista or higher and aren't an Admin, or don't have the appropriate QFE installed.
+				if (!this.calledPerUserTLibReg && (0x8002801c == unchecked((uint) ce.ErrorCode)))
+				{
+					this.Core.OnMessage(WixWarnings.InsufficientPermissionHarvestTypeLib());
+				}
+				else
+				{
+					this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, ce.Message));
+				}
+			}
+			catch (Exception ex)
+			{
+				this.Core.OnMessage(UtilWarnings.SelfRegHarvestFailed(fileSource, ex.Message));
+			}
+		}
+	}
 }

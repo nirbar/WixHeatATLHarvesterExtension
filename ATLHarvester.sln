@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATLHarvester", "ATLHarvester\ATLHarvester.csproj", "{4232BF75-3638-426D-904C-78C7AF446963}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -51,8 +51,8 @@ Global
 		{4232BF75-3638-426D-904C-78C7AF446963}.Release|Win32.ActiveCfg = Release|Any CPU
 		{4232BF75-3638-426D-904C-78C7AF446963}.Release|x86.ActiveCfg = Release|Any CPU
 		{D3850773-2402-411B-818F-C26D01233191}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{D3850773-2402-411B-818F-C26D01233191}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{D3850773-2402-411B-818F-C26D01233191}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{D3850773-2402-411B-818F-C26D01233191}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{D3850773-2402-411B-818F-C26D01233191}.Debug|Mixed Platforms.Build.0 = Debug|x64
 		{D3850773-2402-411B-818F-C26D01233191}.Debug|Win32.ActiveCfg = Debug|Win32
 		{D3850773-2402-411B-818F-C26D01233191}.Debug|Win32.Build.0 = Debug|Win32
 		{D3850773-2402-411B-818F-C26D01233191}.Debug|x86.ActiveCfg = Debug|Win32

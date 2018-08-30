@@ -2,3 +2,5 @@
 *.suo
 *.*sdf
 *.user
+/*.db
+/*.opendb
