@@ -26,6 +26,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4083E9F6-F0B3-4A5E-B203-CA499DCA4AF7}"
 	ProjectSection(SolutionItems) = preProject
 		targets.xml = targets.xml
+		tempdir.xml = tempdir.xml
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RegRedir64", "RegRedir\RegRedir64.vcxproj", "{853F4E59-8F3E-4C4A-A8A0-1078DCC50DF1}"
