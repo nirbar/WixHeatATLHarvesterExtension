@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -65,7 +65,15 @@
     </ProjectReference>
     <ProjectReference Include="..\RegRedir\RegRedir.vcxproj">
       <Name>RegRedir</Name>
-      <Project>{d3850773-2402-411b-818f-c26d01233191}</Project>
+      <Project>{D3850773-2402-411B-818F-C26D01233191}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\RegRedir\RegRedir64.vcxproj">
+      <Name>RegRedir64</Name>
+      <Project>{853F4E59-8F3E-4C4A-A8A0-1078DCC50DF1}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
@@ -73,6 +81,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
+  <Import Project="$(SolutionDir)tempdir.xml" />
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.

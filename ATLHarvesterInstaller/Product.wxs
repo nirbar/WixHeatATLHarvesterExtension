@@ -5,17 +5,19 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
   
-	<Product Id="{AA2556F7-D7A4-43BE-96D6-16B54F6D9D24}" 
+	<Product Id="{A64FBC48-825B-4AC2-8AD3-34955487C0F6}" 
            Name="Spark Extension for Wix Heat" 
-           Language="1033" Version="1.2.1" 
+           Language="1033" Version="1.2.2" 
            Manufacturer="Panel::Software" 
            UpgradeCode="{D2F2FD99-3F8B-4939-8E1D-DD3F356F952B}">
-    
-		<Package Description="Spark Extension for Wix Heat.exe" 
+
+    <Package Description="Spark Extension for Wix Heat.exe" 
              Comments="Spark Extension for Wix Heat.exe"
       InstallerVersion="300" Compressed="yes" InstallScope="perMachine" />
 
-		<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+    <MajorUpgrade AllowSameVersionUpgrades="no" AllowDowngrades="no" DowngradeErrorMessage="A newer version of this extension is already installed." />
+    
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
     <ComponentGroup Id="Files" Directory="INSTALLLOCATION">
       <Component Id="ATLHarvesterExtension.dll" Guid="*">
@@ -59,6 +61,7 @@
     </Condition>
 
     <Property Id="ARPNOMODIFY" Value="1"/>
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLLOCATION]" After="CostFinalize" />
 
     <!-- ======================== -->
     <!-- Set target folder -->
