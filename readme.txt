@@ -64,7 +64,7 @@ process injects a 64-bit DLL into the EXE process for harvesting.
 
 6. How do I build it ?
 ----------------------
-Open ATLHarvester.sln in Visual Studio 2010 and build the projects.  You need to have C#
+Open ATLHarvester.sln in Visual Studio 2015 and build the projects.  You need to have C#
 and C++ installed, obviously.
 
 What are all the projects for ?
@@ -91,12 +91,19 @@ Some of the preprocessing includes:
 - changing the component GUID's to be consistent from build to build (for patching)
 
 A year or so later I moved on to a different team in the same company and added the ability
-to harvest 64-bit COM servers.  We don't do a lot of this, so that functionality is not all that 
-well-tested.  Some folks on the wix-devs list ran some tests and I made a few changes based on
-their comments (such as addition of the Shell Extension keys).
+to harvest 64-bit COM servers. (see footnote 1)
+We don't do a lot of this, so that functionality is not all that well-tested. Some folks on 
+the wix-devs list ran some tests and I made a few changes based on their comments (such as 
+addition of the Shell Extension keys).
 
 I have permission from my employer to contribute this project to Wix as open-source, minus
 any company-specific stuff, of course.
 
 --
 Thanks to Roger Orr for reviewing my initial fork and giving me helpful feedback.
+
+
+----
+Fotnotes:
+
+1) heat.exe vs. x64 harvesting: https://github.com/wixtoolset/issues/issues/1661
