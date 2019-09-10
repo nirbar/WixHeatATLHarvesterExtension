@@ -7,7 +7,7 @@ contributed by Robert Yang (wix@rhysw.com)
 
 1. What Is It ?
 ---------------
-This is an extension to Wix Heat that offers the following capabilities:
+This is an extension to Wix Heat (see footnote 2) that offers the following capabilities:
 
 - Harvest COM EXE servers (32- and 64-bit)
 - Harvest COM DLL servers (64-bit)
@@ -107,3 +107,4 @@ Thanks to Roger Orr for reviewing my initial fork and giving me helpful feedback
 Fotnotes:
 
 1) heat.exe vs. x64 harvesting: https://github.com/wixtoolset/issues/issues/1661
+2) heat extensions: https://blogs.msdn.microsoft.com/icumove/2009/07/02/wix-heat-extension-setting-up-a-custom-extension-project/
