@@ -7,10 +7,10 @@ contributed by Robert Yang (wix@rhysw.com)
 
 1. What Is It ?
 ---------------
-This is an extension to Wix Heat that offers the following capabilities:
+This is an extension to Wix Heat (see footnote 1) that offers the following capabilities:
 
-- Harvest COM EXE servers (32- and 64-bit)
-- Harvest COM DLL servers (64-bit)
+- Harvest COM EXE servers (32- and 64-bit) (see footnote 2)
+- Harvest COM DLL servers (64-bit) (see fotnote 3)
 - Preload harvesting registry with ATL and Shell Extension keys.
 
 The installer presently works with Wix 3.5 - 3.8, but that is just the set of
@@ -80,7 +80,7 @@ What are all the projects for ?
 ----------------
 I started learning Wix in summer 2011 and wrote the 32-bit version of this extension for my employer
 later that year.  Some of our projects have a large number of legacy COM components and the lack of 
-EXE server harvesting in heat had become problematic.
+EXE server harvesting in heat (see fotnote 2) had become problematic.
 
 Just to give an idea, in our build process we have an auto-harvester process which runs 
 every build and harvests all the COM and .NET assembly registration info created by heat.
@@ -91,7 +91,7 @@ Some of the preprocessing includes:
 - changing the component GUID's to be consistent from build to build (for patching)
 
 A year or so later I moved on to a different team in the same company and added the ability
-to harvest 64-bit COM servers. (see footnote 1)
+to harvest 64-bit COM servers. (see footnote 3)
 We don't do a lot of this, so that functionality is not all that well-tested. Some folks on 
 the wix-devs list ran some tests and I made a few changes based on their comments (such as 
 addition of the Shell Extension keys).
@@ -106,4 +106,6 @@ Thanks to Roger Orr for reviewing my initial fork and giving me helpful feedback
 ----
 Fotnotes:
 
-1) heat.exe vs. x64 harvesting: https://github.com/wixtoolset/issues/issues/1661
+1) heat extensions: https://blogs.msdn.microsoft.com/icumove/2009/07/02/wix-heat-extension-setting-up-a-custom-extension-project/
+2) heat vs. out-of-process (exe): https://github.com/wixtoolset/issues/issues/103
+3) heat.exe vs. x64 harvesting: https://github.com/wixtoolset/issues/issues/1661
